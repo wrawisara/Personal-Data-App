@@ -20,7 +20,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         fontFamily: "Metropolis",
         primarySwatch: Colors.blue),
-        home: NameListPage(),
+        home: NameListPage(persons: [],),
     );
   }
 }

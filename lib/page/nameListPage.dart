@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:personal_data_app/page/addDataPage.dart';
+import 'package:personal_data_app/page/personalInfo.dart';
 import '../model/person.dart';
 
 class NameListPage extends StatefulWidget {
-  const NameListPage({Key? key}) : super(key: key);
+  final List<Person> persons;
+  NameListPage({required this.persons});
 
   @override
   _NameListPageState createState() => _NameListPageState();
 }
 
 class _NameListPageState extends State<NameListPage> {
-  List<Person> persons = generatePersonList();
-
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false,
           title: Text('Name List'),
           bottom: TabBar(
             tabs: [
@@ -29,41 +30,57 @@ class _NameListPageState extends State<NameListPage> {
         body: TabBarView(
           children: [
             ListView.builder(
-              itemCount: persons.length,
+              itemCount: widget.persons.length,
               itemBuilder: (context, index) {
-                return Container(
-                  height: 100,
-                  padding: EdgeInsets.only(left: 10, right: 10),
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18.0),
-                    ),
-                    shadowColor: Colors.blueAccent,
-                    child: Center(
-                      child: ListTile(
-                        title: Text(persons[index].name),
-                        subtitle: RichText(
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                  text:
-                                      'Province: ${persons[index].province}\n'),
-                              TextSpan(
-                                  text: 'ID Card: ${persons[index].idCard}'),
-                            ],
-                            style: TextStyle(
-                                fontSize: 14,
-                                height: 1.6,
-                                color:
-                                    Colors.black // Adjust the line spacing here
-                                ),
+                return GestureDetector(
+                  onTap: () async {
+                    final updatedPerson = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            PersonalInfoPage(person: widget.persons[index]),
+                      ),
+                    );
+
+                    if (updatedPerson != null) {
+                      setState(() {
+                        widget.persons[index] = updatedPerson;
+                      });
+                    }
+                  },
+                  child: Container(
+                    height: 100,
+                    padding: EdgeInsets.only(left: 10, right: 10),
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18.0),
+                      ),
+                      shadowColor: Colors.blueAccent,
+                      child: Center(
+                        child: ListTile(
+                          title: Text(widget.persons[index].name),
+                          subtitle: RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                    text:
+                                        'Province: ${widget.persons[index].province}\n'),
+                                TextSpan(
+                                    text:
+                                        'ID Card: ${widget.persons[index].idCard}'),
+                              ],
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  height: 1.6,
+                                  color: Colors.black),
+                            ),
                           ),
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () {
-                            _showDeleteConfirmationDialog(index);
-                          },
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              _showDeleteConfirmationDialog(index);
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -72,10 +89,10 @@ class _NameListPageState extends State<NameListPage> {
               },
             ),
             ListView.builder(
-              itemCount: getCountries(persons).length,
-              itemBuilder: (context, index) {
-                final province = getCountries(persons)[index];
-                final countryPersons = persons
+              itemCount: getProvinces(widget.persons).length,
+              itemBuilder: (context, outerindex) {
+                final province = getProvinces(widget.persons)[outerindex];
+                final provincePersons = widget.persons
                     .where((person) => person.province == province)
                     .toList();
                 return Padding(
@@ -95,7 +112,6 @@ class _NameListPageState extends State<NameListPage> {
                               province,
                               style: TextStyle(
                                 color: Colors.white,
-                                // fontWeight: FontWeight.w600
                               ),
                             ),
                           ),
@@ -107,26 +123,62 @@ class _NameListPageState extends State<NameListPage> {
                       ListView.builder(
                         shrinkWrap: true,
                         physics: NeverScrollableScrollPhysics(),
-                        itemCount: countryPersons.length,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            padding: EdgeInsets.only(right: 10),
-                            child: Card(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18.0),
-                              ),
-                              shadowColor: Colors.blueAccent,
-                              child: Center(
-                                child: ListTile(
-                                  title: Text(countryPersons[index].name),
-                                  trailing: IconButton(
-                                    icon: Icon(Icons.delete),
-                                    onPressed: () {
-                                      final personIndex = persons
-                                          .indexOf(countryPersons[index]);
-                                      _showDeleteConfirmationDialog(
-                                          personIndex);
-                                    },
+                        itemCount: provincePersons.length,
+                        itemBuilder: (context, innerindex) {
+                          final person = provincePersons[innerindex];
+                          return GestureDetector(
+                            onTap: () async {
+                              final updatedPerson = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PersonalInfoPage(
+                                      person: widget.persons.firstWhere(
+                          (p) => p.idCard == person.idCard,
+                        ),
+                                ),
+                              ));
+                              if (updatedPerson != null) {
+                                setState(() {
+                                  final index = widget.persons.indexOf(person);
+                                  widget.persons[index] = updatedPerson;
+                                  // widget.persons[index] = updatedPerson;
+                                });
+                              }
+                            },
+                            child: Container(
+                              padding: EdgeInsets.only(right: 10),
+                              child: Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18.0),
+                                ),
+                                shadowColor: Colors.blueAccent,
+                                child: Center(
+                                  child: ListTile(
+                                    title: Text(person.name),
+                                    subtitle: RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text:
+                                                'Province: ${person.province}\n',
+                                          ),
+                                          TextSpan(
+                                            text: 'ID Card: ${person.idCard}',
+                                          ),
+                                        ],
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          height: 1.6,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                    trailing: IconButton(
+                                      icon: Icon(Icons.delete),
+                                      onPressed: () {
+                                        _showDeleteConfirmationDialog( widget.persons.indexOf(person));
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),
@@ -143,11 +195,22 @@ class _NameListPageState extends State<NameListPage> {
         ),
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
-          onPressed: () {
-            // Show a dialog to add a new person
+          onPressed: () async {
+            final updatedPerson = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddDataPage(
+                  persons: widget.persons,
+                ),
+              ),
+            );
 
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => AddDataPage()));
+            if (updatedPerson != null) {
+              setState(() {
+                widget.persons.clear();
+                widget.persons.addAll(updatedPerson);
+              });
+            }
           },
         ),
       ),
@@ -173,7 +236,7 @@ class _NameListPageState extends State<NameListPage> {
               child: Text('Delete'),
               onPressed: () {
                 setState(() {
-                  persons.removeAt(index);
+                  widget.persons.removeAt(index);
                 });
                 Navigator.of(context).pop();
               },
@@ -184,128 +247,7 @@ class _NameListPageState extends State<NameListPage> {
     );
   }
 
-  List<String> getCountries(List<Person> persons) {
+  List<String> getProvinces(List<Person> persons) {
     return persons.map((person) => person.province).toSet().toList();
   }
 }
-
-// class Person {
-//   final String name;
-//   final String country;
-
-//   Person(this.name, this.country);
-// }
-
-// List<Person> generatePersonList() {
-//   return [
-//     Person('Wave', 'Thailand'),
-//     Person('Chayen', 'Thailand'),
-//     Person('Model', 'United States'),
-//     Person('Dimoo', 'United States'),
-//   ];
-// }
-
-
-
-// class NameListPage extends StatefulWidget {
-//   const NameListPage({super.key});
-
-//   @override
-//   State<NameListPage> createState() => _NameListPageState();
-// }
-
-// class _NameListPageState extends State<NameListPage> {
-//   List<String> names = ['wave','chayen','model','dimoo']; // List to store the names
-
-//   // Function to show a confirmation dialog before deleting a name
-//   Future<void> _showDeleteConfirmationDialog(int index) async {
-//     return showDialog<void>(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (BuildContext context) {
-//         return AlertDialog(
-//           title: Text('Confirm Deletion'),
-//           content: Text('Are you sure you want to delete this name?'),
-//           actions: <Widget>[
-//             TextButton(
-//               child: Text('Cancel'),
-//               onPressed: () {
-//                 Navigator.of(context).pop();
-//               },
-//             ),
-//             TextButton(
-//               child: Text('Delete'),
-//               onPressed: () {
-//                 setState(() {
-//                   names.removeAt(index);
-//                 });
-//                 Navigator.of(context).pop();
-//               },
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text('Name List'),
-//       ),
-//       body: ListView.builder(
-//         itemCount: names.length,
-//         itemBuilder: (context, index) {
-//           return ListTile(
-//             title: Text(names[index]),
-//             trailing: IconButton(
-//               icon: Icon(Icons.delete),
-//               onPressed: () {
-//                 _showDeleteConfirmationDialog(index);
-//               },
-//             ),
-//           );
-//         },
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         child: Icon(Icons.add),
-//         onPressed: () {
-//           // Show a dialog to add a new name
-//           showDialog(
-//             context: context,
-//             builder: (BuildContext context) {
-//               String newName = '';
-
-//               return AlertDialog(
-//                 title: Text('Add Name'),
-//                 content: TextField(
-//                   onChanged: (value) {
-//                     newName = value;
-//                   },
-//                 ),
-//                 actions: <Widget>[
-//                   TextButton(
-//                     child: Text('Cancel'),
-//                     onPressed: () {
-//                       Navigator.of(context).pop();
-//                     },
-//                   ),
-//                   TextButton(
-//                     child: Text('Add'),
-//                     onPressed: () {
-//                       setState(() {
-//                         names.add(newName);
-//                       });
-//                       Navigator.of(context).pop();
-//                     },
-//                   ),
-//                 ],
-//               );
-//             },
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }

@@ -3,18 +3,31 @@ import 'package:flutter/material.dart';
 import '../model/person.dart';
 
 class AddDataPage extends StatefulWidget {
+  final List<Person> persons;
+  AddDataPage({required this.persons});
+
   @override
   _AddDataPageState createState() => _AddDataPageState();
 }
 
 class _AddDataPageState extends State<AddDataPage> {
+  Person person = Person('', 0, '', '', '', '');
+
   int currentStep = 0;
   late TextEditingController nameController;
   late TextEditingController ageController;
   late TextEditingController religionController;
   late TextEditingController idCardController;
   late TextEditingController addressController;
-  late TextEditingController provinceController;
+  late String selectedProvince;
+  // late TextEditingController provinceController;
+
+  final List<String> provinces = [
+    'Bangkok',
+    'Rayong',
+    'Phuket',
+    'Chiang mai',
+  ];
 
   @override
   void initState() {
@@ -24,7 +37,8 @@ class _AddDataPageState extends State<AddDataPage> {
     religionController = TextEditingController();
     idCardController = TextEditingController();
     addressController = TextEditingController();
-    provinceController = TextEditingController();
+    selectedProvince = provinces[0];
+    // provinceController = TextEditingController();
   }
 
   @override
@@ -34,12 +48,16 @@ class _AddDataPageState extends State<AddDataPage> {
     religionController.dispose();
     idCardController.dispose();
     addressController.dispose();
-    provinceController.dispose();
+    // provinceController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+
+
+
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Add Data'),
@@ -49,13 +67,27 @@ class _AddDataPageState extends State<AddDataPage> {
         onStepContinue: () {
           if (currentStep == 1) {
             // Handle submit or save operation
-            _saveData();
+            _saveData().then((updatedPersons) {
+              if (updatedPersons != null) {
+                Navigator.pop(context, updatedPersons);
+              }
+            });
           } else {
             setState(() {
               currentStep += 1;
             });
           }
         },
+        // onStepContinue: () {
+        //   if (currentStep == 1) {
+        //     // Handle submit or save operation
+        //     _saveData();
+        //   } else {
+        //     setState(() {
+        //       currentStep += 1;
+        //     });
+        //   }
+        // },
         onStepCancel: () {
           if (currentStep > 0) {
             setState(() {
@@ -99,9 +131,20 @@ class _AddDataPageState extends State<AddDataPage> {
                   controller: addressController,
                   decoration: InputDecoration(labelText: 'Address'),
                 ),
-                TextField(
-                  controller: provinceController,
+                DropdownButtonFormField<String>(
+                  value: selectedProvince,
                   decoration: InputDecoration(labelText: 'Province'),
+                  items: provinces.map((String province) {
+                    return DropdownMenuItem<String>(
+                      value: province,
+                      child: Text(province),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedProvince = newValue!;
+                    });
+                  },
                 ),
               ],
             ),
@@ -112,16 +155,22 @@ class _AddDataPageState extends State<AddDataPage> {
     );
   }
 
-  void _saveData() {
+  Future<List<Person>> _saveData() async {
     final String name = nameController.text ?? '';
     final int age = int.tryParse(ageController.text) ?? 0;
     final String religion = religionController.text ?? '';
     final String idCard = idCardController.text ?? '';
     final String address = addressController.text ?? '';
-    final String province = provinceController.text ?? '';
+    final String province = selectedProvince;
+
     // Check if any of the required fields are empty
-    if (name.isEmpty || age.toString().isEmpty || religion.isEmpty ||idCard.isEmpty || address.isEmpty || province.isEmpty) {
-      showDialog(
+    if (name.isEmpty ||
+        age.toString().isEmpty ||
+        religion.isEmpty ||
+        idCard.isEmpty ||
+        address.isEmpty ||
+        selectedProvince.isEmpty) {
+      await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -138,20 +187,30 @@ class _AddDataPageState extends State<AddDataPage> {
           );
         },
       );
-      return; 
+      return widget.persons; // Return the current list without any changes
     }
 
+    print(province);
     // Create a Person object and save the data
-    final Person newPerson = Person(name, age, religion, idCard, address, province);
-    // Handle saving the data or performing any other operations
+    final Person newPerson =
+        Person(name, age, religion, province, address, idCard);
+    final updatedList = List<Person>.from(widget.persons)..add(newPerson);
 
-    // Reset the form and navigate back
+    setState(() {
+      widget.persons.clear();
+      widget.persons.addAll(updatedList);
+    });
+
     nameController.clear();
+    ageController.clear();
+    religionController.clear();
     idCardController.clear();
     addressController.clear();
     setState(() {
       currentStep = 0;
     });
-    Navigator.pop(context, newPerson);
+    print(updatedList);
+    return updatedList; // Return the updated list with the new person added
   }
+
 }

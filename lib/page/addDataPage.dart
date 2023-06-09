@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../model/person.dart';
 
 class AddDataPage extends StatefulWidget {
@@ -20,7 +19,6 @@ class _AddDataPageState extends State<AddDataPage> {
   late TextEditingController idCardController;
   late TextEditingController addressController;
   late String selectedProvince;
-  // late TextEditingController provinceController;
 
   final List<String> provinces = [
     'Bangkok',
@@ -38,7 +36,6 @@ class _AddDataPageState extends State<AddDataPage> {
     idCardController = TextEditingController();
     addressController = TextEditingController();
     selectedProvince = provinces[0];
-    // provinceController = TextEditingController();
   }
 
   @override
@@ -48,16 +45,12 @@ class _AddDataPageState extends State<AddDataPage> {
     religionController.dispose();
     idCardController.dispose();
     addressController.dispose();
-    // provinceController.dispose();
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-
-
-
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Add Data'),
@@ -78,16 +71,6 @@ class _AddDataPageState extends State<AddDataPage> {
             });
           }
         },
-        // onStepContinue: () {
-        //   if (currentStep == 1) {
-        //     // Handle submit or save operation
-        //     _saveData();
-        //   } else {
-        //     setState(() {
-        //       currentStep += 1;
-        //     });
-        //   }
-        // },
         onStepCancel: () {
           if (currentStep > 0) {
             setState(() {
@@ -212,5 +195,4 @@ class _AddDataPageState extends State<AddDataPage> {
     print(updatedList);
     return updatedList; // Return the updated list with the new person added
   }
-
 }
